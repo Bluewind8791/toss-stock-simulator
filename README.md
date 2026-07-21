@@ -217,13 +217,24 @@ npm run typecheck
 npm test
 ```
 
+## 일봉 수집
+
+```bash
+node src/scripts/collect.ts TQQQ SOXL [--since 2020-01-01] [--full]
+```
+
+`GET /api/v1/candles` (`interval=1d`, 1회 200봉, `before` 로 과거 페이지네이션) 를 훑어
+`DB_PATH` 의 `candles` 테이블에 저장한다. 기본은 증분 — 저장된 마지막 거래일부터 이어 받고,
+같은 `(symbol, date)` 는 덮어쓰므로 같은 구간을 다시 받아도 결과가 같다.
+
 ## 백테스트 실행
 
 ```bash
-node src/backtest/cli.ts <candles.json> [--ticker TQQQ] [--splits 40] [--seed 10000] [--simple]
+node src/backtest/cli.ts <SYMBOL|candles.json> [--splits 40] [--seed 10000] [--simple] \
+                        [--ticker TQQQ] [--from 2020-01-01] [--to 2024-12-31]
 ```
 
-`candles.json` 은 `{ date, open, high, low, close }` 배열 (날짜 오름차순).
+인자가 `.json` 이면 `{ date, open, high, low, close }` 배열 파일, 아니면 DB 에 수집된 심볼.
 사이클별 손익, 리버스모드 일수, 최종 수익률, 최대 낙폭을 출력한다.
 
 ## 상태
@@ -234,7 +245,8 @@ node src/backtest/cli.ts <candles.json> [--ticker TQQQ] [--splits 40] [--seed 10
 - [x] v4.0 리버스모드
 - [x] 백테스트 러너 (`src/backtest/`)
 - [ ] 다른 버전 (v2.2 / v3.0)
-- [ ] 토스 API 클라이언트 + 일봉 수집
-- [ ] SQLite 영속화
+- [x] 토스 API 클라이언트 + 일봉 수집 (`src/api/`, `src/scripts/collect.ts`)
+- [x] 일봉 SQLite 저장 (`src/db/candles.ts`)
+- [ ] 시뮬 상태 SQLite 영속화
 - [ ] 일일 스케줄러 (페이퍼 트레이딩)
 - [ ] 웹 UI

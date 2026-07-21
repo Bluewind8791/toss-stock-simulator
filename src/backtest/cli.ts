@@ -1,35 +1,57 @@
 /**
  * 백테스트 실행 CLI.
  *
- *   node src/backtest/cli.ts <candles.json> [--ticker TQQQ] [--splits 40] [--seed 10000] [--simple]
+ *   node src/backtest/cli.ts <SYMBOL|candles.json> [--splits 40] [--seed 10000] [--simple]
+ *                            [--from 2020-01-01] [--to 2024-12-31]
  *
- * candles.json 은 { date, open, high, low, close } 배열. 날짜 오름차순.
+ * 인자가 .json 이면 { date, open, high, low, close } 배열 파일, 아니면 DB 에 수집된 심볼.
  */
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import type { Candle } from '../engine/types.ts';
+import { loadCandles, openDb } from '../db/candles.ts';
 import { makeConfig, type Ticker } from '../engine/v4.ts';
 import { backtest } from './run.ts';
 
 const { values, positionals } = parseArgs({
   options: {
-    ticker: { type: 'string', default: 'TQQQ' },
+    ticker: { type: 'string' },
     splits: { type: 'string', default: '40' },
     seed: { type: 'string', default: '10000' },
     simple: { type: 'boolean', default: false },
+    from: { type: 'string' },
+    to: { type: 'string' },
   },
   allowPositionals: true,
 });
 
-const path = positionals[0];
-if (!path) {
-  console.error('usage: node src/backtest/cli.ts <candles.json> [--ticker TQQQ] [--splits 40] [--seed 10000] [--simple]');
+const source = positionals[0];
+if (!source) {
+  console.error('usage: node src/backtest/cli.ts <SYMBOL|candles.json> [--splits 40] [--seed 10000] [--simple] [--from] [--to]');
   process.exit(1);
 }
 
-const candles: Candle[] = JSON.parse(readFileSync(path, 'utf8'));
+let candles: Candle[];
+if (source.endsWith('.json')) {
+  candles = JSON.parse(readFileSync(source, 'utf8'));
+} else {
+  const db = openDb();
+  candles = loadCandles(db, source, values.from, values.to);
+  db.close();
+  if (candles.length === 0) {
+    console.error(`${source} 일봉이 DB 에 없습니다. 먼저 node src/scripts/collect.ts ${source}`);
+    process.exit(1);
+  }
+}
+
+const ticker = values.ticker ?? (source.endsWith('.json') ? 'TQQQ' : source);
+if (ticker !== 'TQQQ' && ticker !== 'SOXL') {
+  console.error(`별% 기준값이 정의된 종목만 됩니다 (TQQQ | SOXL). --ticker 로 지정하세요.`);
+  process.exit(1);
+}
+
 const config = makeConfig(
-  values.ticker as Ticker,
+  ticker as Ticker,
   Number(values.splits),
   Number(values.seed),
   !values.simple,
