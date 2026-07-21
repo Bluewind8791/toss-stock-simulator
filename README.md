@@ -93,9 +93,39 @@ LABU 사태를 계기로 나온 버전. 전반전/후반전을 나누고,
 
 ## 범위
 
-- **현재**: 시뮬레이터 / 백테스트만. 실제 주문 없음.
+- **현재**: 시뮬레이터만. 실제 주문 없음.
+  - **백테스트** — 과거 일봉을 한 번에 흘려 결과 확인
+  - **페이퍼 트레이딩** — 앱을 상시 띄워두고 매일 장 마감마다 하루치를 처리
 - **추후**: 실주문 연동 가능성 있음. 그때까지 주문 관련 코드는 작성하지 않는다.
+
+## 기술 스택
+
+Node 24 + TypeScript. 런타임 의존성 없음.
+
+| 레이어 | 선택 |
+|---|---|
+| 런타임 | Node ≥24 (내장 type stripping — 빌드 스텝 없이 `.ts` 직접 실행) |
+| 타입체크 | `tsc --noEmit` (`npm run typecheck`) |
+| 테스트 | `node:test` (`npm test`) |
+| 저장소 | `node:sqlite` — 시세·시뮬 상태 모두 단일 DB 파일 |
+| API 클라이언트 | 내장 `fetch` + OAuth2 토큰 캐시 |
+| UI | (미착수) Vite + React SPA |
+
+## 설정
+
+```bash
+npm install
+cp .env.example .env   # TOSS_CLIENT_ID / TOSS_CLIENT_SECRET 입력
+npm run typecheck
+npm test
+```
 
 ## 상태
 
-초기 설정 단계. 기술 스택 미정.
+- [x] 프로젝트 스캐폴딩
+- [x] 체결 모사 프리미티브 (`src/engine/fill.ts`)
+- [ ] 버전별 전략 엔진 (v2.2 우선)
+- [ ] 토스 API 클라이언트 + 일봉 수집
+- [ ] SQLite 영속화
+- [ ] 일일 스케줄러 (페이퍼 트레이딩)
+- [ ] 웹 UI
