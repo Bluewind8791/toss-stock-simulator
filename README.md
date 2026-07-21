@@ -217,13 +217,22 @@ npm run typecheck
 npm test
 ```
 
+## 백테스트 실행
+
+```bash
+node src/backtest/cli.ts <candles.json> [--ticker TQQQ] [--splits 40] [--seed 10000] [--simple]
+```
+
+`candles.json` 은 `{ date, open, high, low, close }` 배열 (날짜 오름차순).
+사이클별 손익, 리버스모드 일수, 최종 수익률, 최대 낙폭을 출력한다.
+
 ## 상태
 
 - [x] 프로젝트 스캐폴딩
 - [x] 체결 모사 프리미티브 (`src/engine/fill.ts`)
 - [x] v4.0 일반모드 엔진 (`src/engine/v4.ts`)
 - [x] v4.0 리버스모드
-- [ ] 백테스트 러너
+- [x] 백테스트 러너 (`src/backtest/`)
 - [ ] 다른 버전 (v2.2 / v3.0)
 - [ ] 토스 API 클라이언트 + 일봉 수집
 - [ ] SQLite 영속화
